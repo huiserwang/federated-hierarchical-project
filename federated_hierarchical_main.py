@@ -77,6 +77,7 @@ if __name__ == '__main__':
 
     for epoch in tqdm(range(args.epochs)):
         fv_local_params_list = [[] for _ in range(args.num_fv)]  # N*M FV local model params
+        fv_local_losses_list = [[] for _ in range(args.num_fv)]
         fr_local_params_list, fr_local_losses_list = [], []  # M FR local model params
         print(f'\n | Global Training Round : {epoch+1} |\n')
 
@@ -93,11 +94,12 @@ if __name__ == '__main__':
                 w, loss = local_model.update_weights(
                     model=copy.deepcopy(global_model), global_round=epoch)
                 fv_local_params_list[fv_idx].append(copy.deepcopy(w))
+                fv_local_losses_list[fv_idx].append(copy.deepcopy(loss))
 
         for fr_idx in idxs_fr:
             # collect weights from ground chain
             # TODO: add block chain code in this function
-            ground_weights_fv = get_weights_from_ground_chain_avg(args, fr_idx)
+            ground_weights_fv = get_weights_from_ground_chain(args, fr_idx)
 
             # aggregate FV params
             fv_local_params_list_for_single_fr = [fv_local_params_list[i][fr_idx] for i in idxs_fv]
@@ -105,28 +107,33 @@ if __name__ == '__main__':
             fr_local_params_list.append(fr_params)
 
         fr_model = copy.deepcopy(global_model)
-        # FR update model
-        for fr_idx in idxs_fr:
-            client_name = 'FR {}'.format(fr_idx + 1)
-            fr_model.load_state_dict(fr_local_params_list[fr_idx])
-            local_model = LocalUpdate(args=args, dataset=train_dataset,
-                                      idxs=fr_groups[fr_idx], logger=logger, client_name=client_name)
-            w, loss = local_model.update_weights(
-                model=copy.deepcopy(fr_model), global_round=epoch)
-            # update FR params
-            fr_local_params_list[fr_idx] = copy.deepcopy(w)
-            fr_local_losses_list.append(copy.deepcopy(loss))
+
+        if args.convention is False:
+            # FR update model
+            for fr_idx in idxs_fr:
+                client_name = 'FR {}'.format(fr_idx + 1)
+                fr_model.load_state_dict(fr_local_params_list[fr_idx])
+                local_model = LocalUpdate(args=args, dataset=train_dataset,
+                                        idxs=fr_groups[fr_idx], logger=logger, client_name=client_name)
+                w, loss = local_model.update_weights(
+                    model=copy.deepcopy(fr_model), global_round=epoch)
+                # update FR params
+                fr_local_params_list[fr_idx] = copy.deepcopy(w)
+                fr_local_losses_list.append(copy.deepcopy(loss))
 
         # collect weights from top chain
         # TODO: add block chain code in this function
-        top_weights_fr = get_weights_from_top_chain_avg(args, d_matrix, D_fr)
+        D_fr = 0 if args.convention else 20
+        top_weights_fr = get_weights_from_top_chain(args, d_matrix, D_fr)
         # aggregate FR params
         global_params = aggregate_params(fr_local_params_list, top_weights_fr)
 
         # update global prams
         global_model.load_state_dict(global_params)
-
-        loss_avg = sum(fr_local_losses_list) / len(fr_local_losses_list)
+        if args.convention:
+            loss_avg = np.sum(fv_local_losses_list) / len(fv_local_losses_list) / len(fv_local_losses_list[0])
+        else:
+            loss_avg = sum(fr_local_losses_list) / len(fr_local_losses_list)
         train_loss.append(loss_avg)
 
         # Calculate avg training accuracy over all FRs at every epoch
@@ -186,3 +193,4 @@ if __name__ == '__main__':
 
     print('Training accuracy: {}'.format(train_accuracy))
     print('Testing Accuracy: {}'.format(test_acc))
+    print('Loss: {}'.format(train_loss))
