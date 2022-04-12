@@ -354,7 +354,11 @@ class node(object):
 def get_weights_from_ground_chain_avg(args, fr_idx):
     weights = None
     return weights
-def get_weights_from_ground_chain(args, GC, sender, recipient):
+def get_weights_from_ground_chain(args, d_matrix, D_fr):
+    # TODO: implement searching in block chain
+    weights = d_matrix.sum(axis=0) + D_fr
+    return weights
+def get_weights_from_ground_chain_block(args, GC, sender, recipient):
     # TODO: implement searching in block chain
     ground_chain_weight = tx_in_chain(GC.chain, sender, recipient).learning_result
     #weights = None
