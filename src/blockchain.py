@@ -351,14 +351,16 @@ class node(object):
             return True
 
         return False
-
+def get_weights_from_ground_chain_avg(args, fr_idx):
+    weights = None
+    return weights
 def get_weights_from_ground_chain(args, GC, sender, recipient):
     # TODO: implement searching in block chain
     ground_chain_weight = tx_in_chain(GC.chain, sender, recipient).learning_result
     #weights = None
     return ground_chain_weight
 def add_transaction_to_ground_chain(args, GC, sender, recipient, res=2.4, acc=0.85):
-    GC.new_transaction(sender=sender, recipient=recipient, res=res, acc=acc, 0)
+    GC.new_transaction(sender=sender, recipient=recipient, res=res, acc=acc, sig=0)
 def add_block_to_ground_chain(args, GC, sender, res, acc):
     GC.new_block(sender=sender, res=res, acc=acc)
 
@@ -368,8 +370,12 @@ def get_weights_from_top_chain(args, d_matrix, D_fr):
     # TODO: implement searching in block chain
     weights = d_matrix.sum(axis=0) + D_fr
     return weights
+def get_weights_from_top_chain_avg(args, d_matrix, D_fr):
+    # TODO: implement searching in block chain
+    weights = None
+    return weights
 def add_transaction_to_top_chain(args, TC, sender, recipient, res=2.4, acc=0.85):
-    GC.new_transaction(sender=sender, recipient=recipient, res=res, acc=acc, 0)
+    GC.new_transaction(sender=sender, recipient=recipient, res=res, acc=acc, sig=0)
 def add_block_to_top_chain(args, TC, sender, res, acc):
     GC.new_block(sender=sender, res=res, acc=acc)
 
@@ -387,7 +393,7 @@ if __name__ == '__main__':
     res = 2.4
     acc = 0.85
     # 添加transaction所需函数，其中作为实验模拟sender、recipient自定义，res可以设置为存储权重d_mn，acc可有可无，sig不需要
-    GC.new_transaction(sender, recipient, res, acc, 0)
+    GC.new_transaction(sender, recipient, res, acc, sig=0)
     # 添加block所需函数
     GC.new_block(sender, res, acc=acc)
     # 根据id查找所需transaction，并且从而得到所需权重d_mn

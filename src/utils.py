@@ -43,7 +43,7 @@ def get_dataset(args, d_matrix, D_fr):
     each of those users.
     """
     if args.dataset == 'cifar':
-        data_dir = '../data/cifar/'
+        data_dir = './data/cifar/'
         apply_transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -57,7 +57,7 @@ def get_dataset(args, d_matrix, D_fr):
         fv_groups, fr_groups = data_sample(args, train_dataset, d_matrix, D_fr, args.num_fv, args.num_fr)
 
     elif args.dataset == 'mnist':
-        data_dir = '../data/mnist/'
+        data_dir = './data/mnist/'
 
         apply_transform = transforms.Compose([
             transforms.ToTensor(),
